@@ -9,6 +9,9 @@ class Post(models.Model):
     modified_date = models.DateTimeField(auto_now=True)
     published_date = models.DateTimeField(blank=True, null=True)
 
+    def get_absolute_url(self):
+        return '/posts/{}/'.format(str(self.pk))
+
     def __str__(self):
         return self.title
 
@@ -23,3 +26,4 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = 'Categories'
+

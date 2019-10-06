@@ -1,7 +1,13 @@
-from django.shortcuts import render
+from django.contrib.auth.models import User, Group
+from django.shortcuts import render, redirect
+from django import forms
+from django.utils import timezone
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.template import loader
-from blogging.models import Post
+from rest_framework import viewsets
+from blogging.models import Post, Category
+from blogging.serializers import UserSerializer, GroupSerializer, PostSerializer, CategorySerializer
+from blogging.forms import PostForm
 
 def list_view(request):
     published = Post.objects.exclude(published_date__exact=None)
@@ -29,4 +35,47 @@ def detail_view(request, post_id):
         raise Http404
     context = {'post': post}
     return render(request, 'blogging/detail.html', context)
+
+def add_model(request):
+
+    if request.method == 'POST':
+        form = PostForm(request.POST)
+        if form.is_valid():
+            model_instance = form.save(commit=False)
+            model_instance.timestamp = timezone.now()
+            model_instance.save()
+            return redirect('/')
+    
+    else:
+
+        form = PostForm()
+        return render(request, 'blogging/add_post.html', {'form': form})
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows users to be viewed or edited.
+    """
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+
+class GroupViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows groups to be viewed or edited.
+    """
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+
+class PostViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows posts to be viewed or edited.
+    """
+    queryset = Post.objects.all().order_by('-published_date')
+    serializer_class = PostSerializer
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows posts to be viewed or edited.
+    """
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
 
